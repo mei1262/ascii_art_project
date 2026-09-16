@@ -1,9 +1,5 @@
 # ascii_art_project
 
-突然对ASCII艺术很感兴趣，做了非结构ASCII转化模型，觉得不过瘾就研究一下结构性ASCII艺术；自己做的line_art_demo局限性比较大，也没有标注标签训练的条件，于是借用DeepAA项目的经验，数据和权重做了一些优化。
-
-I suddenly got interested in ASCII art, built a non-structural ASCII converter, then went further into structural ASCII. line_art_demo is quite limited, and I had no labeled data to train with, so I borrowed experience, data, and weights from the DeepAA project and made some optimizations.
-
 ## 引用 / Reference
 
 Taizan Yonetsuji. *DeepAA*. 2017. <https://github.com/taizan/DeepAA>
@@ -22,41 +18,57 @@ Model 9/10 keep official DeepAA decode but use a smaller head. Model 10 only ski
 
 ## EVA 8 帧对照 / EVA 8-frame comparison
 
-AniLines detail from *明日香来日*. Each row: **line** · **line_art_demo (5)** · **9** · **10** · **official DeepAA**.
+AniLines detail from *明日香来日*. Model names are printed on each panel.
 
-line_art_demo uses a fixed grid, so **its characters are smaller** than DeepAA / 9 / 10 in these thumbnails. 9 and 10 use `--width 0`. Official DeepAA here is `line-art-8-puredeepaa` (full FC4096 weights).
+line_art_demo uses a fixed grid, so **its characters are smaller** than DeepAA / 9 / 10. 9 and 10 use `--width 0`. Official DeepAA here is `line-art-8-puredeepaa` (full FC4096 weights).
 
 ### 01 · f72
 
-<img src="samples/eva-compare/01_line.png" width="160"> <img src="samples/eva-compare/01_m5.png" width="160"> <img src="samples/eva-compare/01_m9.png" width="160"> <img src="samples/eva-compare/01_m10.png" width="160"> <img src="samples/eva-compare/01_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/01_line.png" width="170"> | <img src="samples/eva-compare/01_m5.png" width="170"> | <img src="samples/eva-compare/01_m9.png" width="170"> | <img src="samples/eva-compare/01_m10.png" width="170"> | <img src="samples/eva-compare/01_deepaa.png" width="170"> |
 
 ### 02 · f163
 
-<img src="samples/eva-compare/02_line.png" width="160"> <img src="samples/eva-compare/02_m5.png" width="160"> <img src="samples/eva-compare/02_m9.png" width="160"> <img src="samples/eva-compare/02_m10.png" width="160"> <img src="samples/eva-compare/02_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/02_line.png" width="170"> | <img src="samples/eva-compare/02_m5.png" width="170"> | <img src="samples/eva-compare/02_m9.png" width="170"> | <img src="samples/eva-compare/02_m10.png" width="170"> | <img src="samples/eva-compare/02_deepaa.png" width="170"> |
 
 ### 03 · f253
 
-<img src="samples/eva-compare/03_line.png" width="160"> <img src="samples/eva-compare/03_m5.png" width="160"> <img src="samples/eva-compare/03_m9.png" width="160"> <img src="samples/eva-compare/03_m10.png" width="160"> <img src="samples/eva-compare/03_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/03_line.png" width="170"> | <img src="samples/eva-compare/03_m5.png" width="170"> | <img src="samples/eva-compare/03_m9.png" width="170"> | <img src="samples/eva-compare/03_m10.png" width="170"> | <img src="samples/eva-compare/03_deepaa.png" width="170"> |
 
 ### 04 · f344
 
-<img src="samples/eva-compare/04_line.png" width="160"> <img src="samples/eva-compare/04_m5.png" width="160"> <img src="samples/eva-compare/04_m9.png" width="160"> <img src="samples/eva-compare/04_m10.png" width="160"> <img src="samples/eva-compare/04_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/04_line.png" width="170"> | <img src="samples/eva-compare/04_m5.png" width="170"> | <img src="samples/eva-compare/04_m9.png" width="170"> | <img src="samples/eva-compare/04_m10.png" width="170"> | <img src="samples/eva-compare/04_deepaa.png" width="170"> |
 
 ### 05 · f434
 
-<img src="samples/eva-compare/05_line.png" width="160"> <img src="samples/eva-compare/05_m5.png" width="160"> <img src="samples/eva-compare/05_m9.png" width="160"> <img src="samples/eva-compare/05_m10.png" width="160"> <img src="samples/eva-compare/05_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/05_line.png" width="170"> | <img src="samples/eva-compare/05_m5.png" width="170"> | <img src="samples/eva-compare/05_m9.png" width="170"> | <img src="samples/eva-compare/05_m10.png" width="170"> | <img src="samples/eva-compare/05_deepaa.png" width="170"> |
 
 ### 06 · f525
 
-<img src="samples/eva-compare/06_line.png" width="160"> <img src="samples/eva-compare/06_m5.png" width="160"> <img src="samples/eva-compare/06_m9.png" width="160"> <img src="samples/eva-compare/06_m10.png" width="160"> <img src="samples/eva-compare/06_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/06_line.png" width="170"> | <img src="samples/eva-compare/06_m5.png" width="170"> | <img src="samples/eva-compare/06_m9.png" width="170"> | <img src="samples/eva-compare/06_m10.png" width="170"> | <img src="samples/eva-compare/06_deepaa.png" width="170"> |
 
 ### 07 · f616
 
-<img src="samples/eva-compare/07_line.png" width="160"> <img src="samples/eva-compare/07_m5.png" width="160"> <img src="samples/eva-compare/07_m9.png" width="160"> <img src="samples/eva-compare/07_m10.png" width="160"> <img src="samples/eva-compare/07_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/07_line.png" width="170"> | <img src="samples/eva-compare/07_m5.png" width="170"> | <img src="samples/eva-compare/07_m9.png" width="170"> | <img src="samples/eva-compare/07_m10.png" width="170"> | <img src="samples/eva-compare/07_deepaa.png" width="170"> |
 
 ### 08 · f706
 
-<img src="samples/eva-compare/08_line.png" width="160"> <img src="samples/eva-compare/08_m5.png" width="160"> <img src="samples/eva-compare/08_m9.png" width="160"> <img src="samples/eva-compare/08_m10.png" width="160"> <img src="samples/eva-compare/08_deepaa.png" width="160">
+| line | line_art_demo | model 9 | model 10 | DeepAA |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="samples/eva-compare/08_line.png" width="170"> | <img src="samples/eva-compare/08_m5.png" width="170"> | <img src="samples/eva-compare/08_m9.png" width="170"> | <img src="samples/eva-compare/08_m10.png" width="170"> | <img src="samples/eva-compare/08_deepaa.png" width="170"> |
 
 ## 目录 / Layout
 

@@ -7,7 +7,7 @@ basic 和 detail 是同一套 U-Net，只差输入通道（3 对 2）和预处�
 图片文件夹或视频都可以：
   python src/anilines.py --input input
   python src/anilines.py --input video.mp4 --fps 8
-再把 output/anilines 喂给 line_art_3 / line_art_4 的 --from-lines。
+再把 output/anilines 喂给 line_art_demo / line_art_9 的 --from-lines。
 """
 import argparse
 import os

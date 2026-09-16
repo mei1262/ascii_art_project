@@ -1,5 +1,5 @@
 """
-line_art_3：更贴原线的结构 ASCII。不改 line_art / line_art_2。
+line_art_3：更贴原线的结构 ASCII。供 line_art_demo 复用。
 
 不是禁用 <>，而是按格子外形选字：像 / 就用 /，像 < 才用 <。
 分数接近时优先更简单的笔画，避免细线被 []+_ 抢走。

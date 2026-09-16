@@ -325,12 +325,6 @@ def batch_extract_lines(
     files = [f for f in os.listdir(input_folder) if f.lower().endswith(valid)]
     saved = []
     print(f"线稿提取：{len(files)} 张，方法 {method}，线宽 {stroke_width}  from_lines={from_lines}")
-    ascii_fn = None
-    if from_lines:
-        from glyphs import save_ascii_png
-        from line_art_2 import line_to_thin_ascii
-
-        ascii_fn = (save_ascii_png, line_to_thin_ascii)
     for idx, name in enumerate(files, 1):
         src = os.path.join(input_folder, name)
         try:
@@ -344,14 +338,6 @@ def batch_extract_lines(
             out = os.path.join(output_folder, f"{base}_line.png")
             cv2.imwrite(out, lines)
             saved.append((name, out))
-            if ascii_fn:
-                save_ascii_png, line_to_thin_ascii = ascii_fn
-                save_ascii_png(
-                    line_to_thin_ascii(lines, cols=cols),
-                    os.path.join(output_folder, f"{base}_ascii.png"),
-                    cell_w=16,
-                    cell_h=16,
-                )
             print(f"[{idx}/{len(files)}] {name}")
         except Exception as exc:
             print(f"[{idx}/{len(files)}] 失败 {name}: {exc}")
