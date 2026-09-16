@@ -1,0 +1,13 @@
+{
+  "method": "official DeepAA conv + FC512 head",
+  "val_accuracy": 0.7941342357586012,
+  "last_val_accuracy": 0.7851099830795262,
+  "best_epoch": 23,
+  "last_epoch": 26,
+  "epochs_done": 26,
+  "n_classes": 411,
+  "n_train": 18227,
+  "n_val": 1773,
+  "fc_size": 512,
+  "frozen_conv": true
+}

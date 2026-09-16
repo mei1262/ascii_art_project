@@ -1,0 +1,7 @@
+torch
+opencv-python
+pillow
+numpy
+pandas
+h5py
+huggingface_hub

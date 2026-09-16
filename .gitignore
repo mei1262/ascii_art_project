@@ -1,0 +1,40 @@
+# local media (keep on disk, do not publish)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm
+*.m4v
+*.mp3
+*.wav
+
+# generated / private trees
+output/
+input/
+成品/
+论文/
+ascii_art_project/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# third-party weights too large for GitHub
+models/anilines/.cache/
+models/anilines/detail.pth
+models/deepaa_official/weight_full.pt
+models/deepaa_official/weight.hdf5
+models/**/*_last.pt
+
+# training corpora
+data/image_500/
+data/weight.hdf5
+data/deepaa/
+data/ascii95_eu/
+data/struct_nonempty.csv
+data/struct_nonempty.json
+data/struct_nonempty_preview/
