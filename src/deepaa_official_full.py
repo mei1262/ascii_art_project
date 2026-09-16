@@ -253,8 +253,22 @@ def pad_official(gray):
     return canvas.astype(np.float32) / 255.0
 
 
+def _ideo_space_index(chars, space):
+    for i, ch in enumerate(chars):
+        if ch == "\u3000":
+            return i
+    return space
+
+
+def window_ink_ratio(patch, dark=0.88):
+    """Fraction of 64x64 pixels darker than `dark`. White paper is ~1.0."""
+    if patch.size == 0:
+        return 0.0
+    return float((patch < dark).mean())
+
+
 @torch.no_grad()
-def _decode_row(model, device, row, chars, space, widths):
+def _decode_row(model, device, row, chars, space, widths, ink_skip=0.0, skip_stats=None, ideo=None):
     """Official output.py: one window, one char, then jump by that char's width."""
     row_t = torch.from_numpy(np.ascontiguousarray(row))[None, None].to(device)
     width = row.shape[1]
@@ -262,12 +276,23 @@ def _decode_row(model, device, row, chars, space, widths):
     penalty = True
     line = []
     max_w = width - WIN
+    if ideo is None:
+        ideo = space
     while w <= max_w:
-        logits = model(row_t[:, :, :, w : w + WIN])[0]
-        if penalty:
-            logits = logits.clone()
-            logits[space] = -1e9
-        idx = int(logits.argmax())
+        patch = row[:, w : w + WIN]
+        ink = window_ink_ratio(patch) if ink_skip > 0 else 1.0
+        if ink_skip > 0 and ink < ink_skip:
+            idx = ideo
+            if skip_stats is not None:
+                skip_stats["skip"] = skip_stats.get("skip", 0) + 1
+        else:
+            logits = model(row_t[:, :, :, w : w + WIN])[0]
+            if penalty:
+                logits = logits.clone()
+                logits[space] = -1e9
+            idx = int(logits.argmax())
+            if skip_stats is not None:
+                skip_stats["infer"] = skip_stats.get("infer", 0) + 1
         penalty = idx == space
         line.append(chars[idx])
         w += int(widths[idx])
@@ -297,13 +322,17 @@ def decode_official(
     char_dict,
     slide=0,
     chunk=128,
+    ink_skip=0.0,
+    skip_stats=None,
 ):
     """
     Official output.py decode: 18px rows, variable char width, no fold.
     Space class is banned when the previous char was not a space.
     Only one vertical slide (default 0). chunk is unused; decode is one window per char.
+    ink_skip: skip the net when 64x64 ink fraction is below this. 0 disables (model 9).
     """
     space = space_index(chars)
+    ideo = _ideo_space_index(chars, space)
     widths = char_widths(chars, char_dict)
     img = pad_official(gray)
     img = np.concatenate(
@@ -313,7 +342,19 @@ def decode_official(
     predicts = []
     for h in range(num_line):
         row = img[h * CELL_H : h * CELL_H + WIN]
-        predicts.append(_decode_row(model, device, row, chars, space, widths))
+        predicts.append(
+            _decode_row(
+                model,
+                device,
+                row,
+                chars,
+                space,
+                widths,
+                ink_skip=ink_skip,
+                skip_stats=skip_stats,
+                ideo=ideo,
+            )
+        )
     text = "\n".join("".join(line) for line in predicts)
     png = render_official(predicts, img.shape, char_dict, slide, gray.shape[1], gray.shape[0])
     return text, png, num_line

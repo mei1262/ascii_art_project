@@ -19,11 +19,11 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from line_art import load_gray_for_lines, photo_to_line, save_line_gallery
+from line_art import load_gray_for_lines, photo_to_line
 from line_art_4 import VIDEO_EXTS, finalize_mp4
 from deepaa_official_full import decode_official, gray_official_array, load_char_dict
 from deepaa_smallhead import load_smallhead
-from main import DEFAULT_INPUT, DEFAULT_OUTPUT, save_batch_html
+from main import DEFAULT_INPUT, DEFAULT_OUTPUT
 
 STRATEGY_NAME = "line-art-9-deepaa-light"
 DEFAULT_OUT = os.path.join(DEFAULT_OUTPUT, STRATEGY_NAME)
@@ -39,14 +39,23 @@ def line_gray_from_path(path, from_lines, method):
     return photo_to_line(gray, method=method, stroke_width=1)
 
 
-def convert_from_line(gray, aa_model, char_dict, new_width=0, slide=0, chunk=128):
+def convert_from_line(gray, aa_model, char_dict, new_width=0, slide=0, chunk=128, ink_skip=0.0):
     model, chars, device, _w, _dw = aa_model
     work, used_w, used_h = gray_official_array(gray, new_width)
+    stats = {"skip": 0, "infer": 0}
     text, png, rows = decode_official(
-        model, device, work, chars, char_dict, slide=slide, chunk=chunk
+        model,
+        device,
+        work,
+        chars,
+        char_dict,
+        slide=slide,
+        chunk=chunk,
+        ink_skip=ink_skip,
+        skip_stats=stats,
     )
     preview = work if float(work.mean()) > 127.0 else (255 - work)
-    return text, preview.astype(np.uint8), png, rows, used_w, used_h
+    return text, preview.astype(np.uint8), png, rows, used_w, used_h, stats
 
 
 def _save_ascii_frame(png, out_path):
@@ -138,6 +147,7 @@ def convert_line_video(
     slide=0,
     chunk=128,
     restart=False,
+    ink_skip=0.0,
 ):
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
@@ -176,8 +186,14 @@ def convert_line_video(
                     idx += 1
                     continue
                 gray = frame[:, :, 0] if frame.ndim == 3 else frame
-                text, _, png, rows, used_w, used_h = convert_from_line(
-                    gray, aa_model, char_dict, new_width=new_width, slide=slide, chunk=chunk
+                text, _, png, rows, used_w, used_h, stats = convert_from_line(
+                    gray,
+                    aa_model,
+                    char_dict,
+                    new_width=new_width,
+                    slide=slide,
+                    chunk=chunk,
+                    ink_skip=ink_skip,
                 )
                 _save_ascii_frame(png, _frame_png(work_dir, idx))
                 idx += 1
@@ -194,8 +210,16 @@ def convert_line_video(
                     },
                 )
                 if done == 1 or done % 5 == 0 or done == total:
+                    nwin = stats["skip"] + stats["infer"]
+                    skip_msg = ""
+                    if ink_skip > 0 and nwin:
+                        skip_msg = (
+                            f"  empty-skip {stats['skip']}/{nwin} "
+                            f"({100.0 * stats['skip'] / nwin:.1f}%)"
+                        )
                     print(
-                        f"  ascii frame {done}/{total or '?'}  {used_w}x{used_h} rows={rows}",
+                        f"  ascii frame {done}/{total or '?'}  {used_w}x{used_h} rows={rows}"
+                        f"{skip_msg}",
                         flush=True,
                     )
                 if total and done >= total:
@@ -228,6 +252,7 @@ def batch_extract(
     from_lines=False,
     slide=0,
     chunk=128,
+    ink_skip=0.0,
 ):
     if not os.path.exists(input_folder):
         print(f"input not found: {input_folder}")
@@ -235,20 +260,25 @@ def batch_extract(
     os.makedirs(output_folder, exist_ok=True)
     files = [f for f in os.listdir(input_folder) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
     saved = []
-    arts = {}
     aa_model = load_smallhead()
     char_dict = load_char_dict()
     print(
         f"{STRATEGY_NAME}: {len(files)} images  pixel_width={new_width or 'original'}  "
-        f"from_lines={from_lines}  slide={slide}  chunk={chunk}"
+        f"from_lines={from_lines}  slide={slide}  ink_skip={ink_skip or 'off'}"
     )
     for idx, name in enumerate(files, 1):
         src = os.path.join(input_folder, name)
         try:
             gray = line_gray_from_path(src, from_lines, method)
             orig_h, orig_w = gray.shape
-            text, preview, png, rows, used_w, used_h = convert_from_line(
-                gray, aa_model, char_dict, new_width=new_width, slide=slide, chunk=chunk
+            text, preview, png, rows, used_w, used_h, stats = convert_from_line(
+                gray,
+                aa_model,
+                char_dict,
+                new_width=new_width,
+                slide=slide,
+                chunk=chunk,
+                ink_skip=ink_skip,
             )
             base, _ = os.path.splitext(name)
             line_path = os.path.join(output_folder, f"{base}_line.png")
@@ -257,32 +287,20 @@ def batch_extract(
             with open(os.path.join(output_folder, f"{base}_ascii.txt"), "w", encoding="utf-8") as f:
                 f.write(text + "\n")
             saved.append((name, line_path))
-            arts[name] = text
+            nwin = stats["skip"] + stats["infer"]
+            skip_msg = ""
+            if ink_skip > 0 and nwin:
+                skip_msg = (
+                    f"  empty-skip {stats['skip']}/{nwin} "
+                    f"({100.0 * stats['skip'] / nwin:.1f}%)"
+                )
             print(
                 f"[{idx}/{len(files)}] {name}  {orig_w}x{orig_h} -> {used_w}x{used_h}  "
                 f"rows={rows}  chars={sum(len(line) for line in text.splitlines())}"
+                f"{skip_msg}"
             )
         except Exception as exc:
             print(f"[{idx}/{len(files)}] failed {name}: {exc}")
-    tag = os.path.basename(os.path.normpath(output_folder))
-    stem = "all_" + STRATEGY_NAME.replace("-", "_")
-    if tag != STRATEGY_NAME:
-        stem = f"{stem}_{tag}"
-    if saved:
-        gallery = os.path.join(DEFAULT_OUTPUT, f"{stem}.html")
-        save_line_gallery(saved, gallery, title=f"{STRATEGY_NAME} {tag}")
-        print(f"line gallery: {os.path.abspath(gallery)}")
-    if arts:
-        ascii_html = os.path.join(DEFAULT_OUTPUT, f"{stem}_ascii.html")
-        save_batch_html(
-            arts,
-            ascii_html,
-            dark_mode=False,
-            font_size=12,
-            line_height=1.125,
-            font_family='"MS Gothic", "MS PGothic", "Yu Gothic", monospace',
-        )
-        print(f"ASCII gallery: {os.path.abspath(ascii_html)}")
     return saved
 
 
