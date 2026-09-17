@@ -2,7 +2,7 @@
 
 ## 引用 / Reference
 
-Taizan Yonetsuji. *DeepAA*. 2017. <https://github.com/taizan/DeepAA>
+Taizan Yonetsuji. *DeepAA*. 2017. <https://github.com/OsciiArt/DeepAA>
 
 ## 模型对比 / Models
 
