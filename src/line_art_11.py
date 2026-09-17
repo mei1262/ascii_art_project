@@ -1,7 +1,7 @@
 """
-line-art-10-deepaa-light-empty-skip
+line-art-11-deepaa-light-row-batch
 
-Standalone inference: empty-window skip, one 64x64 forward per character.
+Standalone inference: empty-window skip + one batched forward per row-step.
 Does not import other project scripts.
 
 Take these with the .py:
@@ -27,8 +27,8 @@ import torch
 import torch.nn as nn
 from PIL import Image
 
-STRATEGY_NAME = "line-art-10-deepaa-light-empty-skip"
-ROW_BATCH = False
+STRATEGY_NAME = "line-art-11-deepaa-light-row-batch"
+ROW_BATCH = True
 INK_SKIP_DEFAULT = 0.0008
 VIDEO_EXTS = (".mp4", ".avi", ".mov", ".mkv", ".webm", ".m4v")
 WIN = 64

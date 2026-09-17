@@ -39,7 +39,16 @@ def line_gray_from_path(path, from_lines, method):
     return photo_to_line(gray, method=method, stroke_width=1)
 
 
-def convert_from_line(gray, aa_model, char_dict, new_width=0, slide=0, chunk=128, ink_skip=0.0):
+def convert_from_line(
+    gray,
+    aa_model,
+    char_dict,
+    new_width=0,
+    slide=0,
+    chunk=128,
+    ink_skip=0.0,
+    row_batch=False,
+):
     model, chars, device, _w, _dw = aa_model
     work, used_w, used_h = gray_official_array(gray, new_width)
     stats = {"skip": 0, "infer": 0}
@@ -53,6 +62,7 @@ def convert_from_line(gray, aa_model, char_dict, new_width=0, slide=0, chunk=128
         chunk=chunk,
         ink_skip=ink_skip,
         skip_stats=stats,
+        row_batch=row_batch,
     )
     preview = work if float(work.mean()) > 127.0 else (255 - work)
     return text, preview.astype(np.uint8), png, rows, used_w, used_h, stats
@@ -148,6 +158,7 @@ def convert_line_video(
     chunk=128,
     restart=False,
     ink_skip=0.0,
+    row_batch=False,
 ):
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
@@ -194,6 +205,7 @@ def convert_line_video(
                     slide=slide,
                     chunk=chunk,
                     ink_skip=ink_skip,
+                    row_batch=row_batch,
                 )
                 _save_ascii_frame(png, _frame_png(work_dir, idx))
                 idx += 1
@@ -253,6 +265,7 @@ def batch_extract(
     slide=0,
     chunk=128,
     ink_skip=0.0,
+    row_batch=False,
 ):
     if not os.path.exists(input_folder):
         print(f"input not found: {input_folder}")
@@ -265,6 +278,7 @@ def batch_extract(
     print(
         f"{STRATEGY_NAME}: {len(files)} images  pixel_width={new_width or 'original'}  "
         f"from_lines={from_lines}  slide={slide}  ink_skip={ink_skip or 'off'}"
+        f"  row_batch={row_batch}"
     )
     for idx, name in enumerate(files, 1):
         src = os.path.join(input_folder, name)
@@ -279,6 +293,7 @@ def batch_extract(
                 slide=slide,
                 chunk=chunk,
                 ink_skip=ink_skip,
+                row_batch=row_batch,
             )
             base, _ = os.path.splitext(name)
             line_path = os.path.join(output_folder, f"{base}_line.png")

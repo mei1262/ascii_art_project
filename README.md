@@ -2,19 +2,19 @@
 
 ## 引用 / Reference
 
-Osamu Akiyama 2017, ASCII Art Synthesis with Convolutional NetworksASCII Art Synthesis with Convolutional Networks. <https://github.com/OsciiArt/DeepAA>
+Taizan Yonetsuji. *DeepAA*. 2017. <https://github.com/taizan/DeepAA>
 
 ## 模型对比 / Models
 
-| | line_art_demo（模型 5） | 模型 9 | 模型 10 | 官方 DeepAA |
-|---|---|---|---|---|
-| Origin | **Self-made**, 0 NN weights | Frozen official conv + FC512 | Same as 9, skip empty windows | Full official net |
-| Characters | Direction strokes `/ \ - \| ~` only | Official 411, variable width | Same as 9 | Official 411 |
-| Layout | Fixed 18×30 grid; **glyphs look smaller** in the comparison | `char_dict` variable width, 18px rows | Same as 9 | Same as 9 (slide=0 here) |
-| Params | 0 | ~10.6M | ~10.6M | ~87.3M |
-| Script | `src/line_art_demo.py` | `src/line_art_9.py` | `src/line_art_10.py` | `src/line_art_8_puredeepaa.py` |
+| | line_art_demo（模型 5） | 模型 9 | 模型 10 | 模型 11 | 官方 DeepAA |
+|---|---|---|---|---|---|
+| Origin | **Self-made**, 0 NN weights | Frozen official conv + FC512 | Same as 9, skip empty windows | Same as 10, plus batch windows across rows | Full official net |
+| Characters | Direction strokes `/ \ - \| ~` only | Official 411, variable width | Same as 9 | Same as 9 | Official 411 |
+| Layout | Fixed 18×30 grid; **glyphs look smaller** in the comparison | `char_dict` variable width, 18px rows | Same as 9 | Same as 9 | Same as 9 (slide=0 here) |
+| Params | 0 | ~10.6M | ~10.6M | ~10.6M | ~87.3M |
+| Script | `src/line_art_demo.py` | `src/line_art_9.py` | `src/line_art_10.py` | `src/line_art_11.py` | `src/line_art_8_puredeepaa.py` |
 
-Model 9/10 keep official DeepAA decode but use a smaller head. Model 10 only skips nearly empty 64×64 windows (`--ink-skip 0.0008`). On the 8 EVA stills, 10 matched 9 exactly and skipped 13.9% of windows (~1.16× fewer forwards).
+Model 9/10/11 keep official DeepAA decode but use a smaller head. Model 10 skips nearly empty 64×64 windows (`--ink-skip 0.0008`). Model 11 is 10 plus one batched forward per step across independent rows. `line_art_10.py` / `line_art_11.py` are standalone (no import of other `src` models); take the `.py` plus `models/deepaa_official/weight_smallhead.pt` and `char_dict.pkl`. On the 8 EVA stills, 10 matched 9 exactly and skipped 13.9% of windows; 11 should match 10.
 
 ## EVA 8 帧对照 / EVA 8-frame comparison
 
@@ -106,6 +106,12 @@ python src/line_art_10.py --from-lines --width 0 --input input/eva-line --output
 ```
 
 Raise `--ink-skip` only after checking that strokes are not dropped (try `0.002`, then `0.005`). `0` equals model 9.
+
+Model 11 (model 10 empty-skip + batch one window from every row per step):
+
+```text
+python src/line_art_11.py --from-lines --width 0 --input input/eva-line --output output/line-art-11-deepaa-light-row-batch
+```
 
 AniLines line video:
 

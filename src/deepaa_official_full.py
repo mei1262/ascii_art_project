@@ -314,6 +314,71 @@ def render_official(predicts, img_shape, char_dict, slide, out_w, out_h):
 
 
 @torch.no_grad()
+def _decode_rows_batched(
+    model,
+    device,
+    rows_np,
+    chars,
+    space,
+    widths,
+    ink_skip=0.0,
+    skip_stats=None,
+    ideo=None,
+):
+    """Same greedy decode as _decode_row, one batched forward per step across rows.
+
+    Rows are independent. Every unfinished row contributes its current 64x64 window;
+    the net runs once; each row then jumps by its own glyph width.
+    """
+    num_line, _win_h, width = rows_np.shape
+    if ideo is None:
+        ideo = space
+    max_w = width - WIN
+    rows_t = torch.from_numpy(np.ascontiguousarray(rows_np))[:, None].to(device)
+    ws = [0] * num_line
+    alive = [True] * num_line
+    penalty = [True] * num_line
+    lines = [[] for _ in range(num_line)]
+    while True:
+        infer_h = []
+        for h in range(num_line):
+            if not alive[h]:
+                continue
+            if ws[h] > max_w:
+                alive[h] = False
+                continue
+            w = ws[h]
+            if ink_skip > 0 and window_ink_ratio(rows_np[h, :, w : w + WIN]) < ink_skip:
+                idx = ideo
+                lines[h].append(chars[idx])
+                penalty[h] = idx == space
+                ws[h] = w + int(widths[idx])
+                if skip_stats is not None:
+                    skip_stats["skip"] = skip_stats.get("skip", 0) + 1
+            else:
+                infer_h.append(h)
+        if not infer_h:
+            if any(alive):
+                continue
+            break
+        batch = torch.stack([rows_t[h, :, :, ws[h] : ws[h] + WIN] for h in infer_h], dim=0)
+        logits = model(batch).clone()
+        pen = torch.tensor(
+            [penalty[h] for h in infer_h], device=logits.device, dtype=torch.bool
+        )
+        logits[pen, space] = -1e9
+        idxs = logits.argmax(dim=1)
+        for i, h in enumerate(infer_h):
+            idx = int(idxs[i].item())
+            lines[h].append(chars[idx])
+            penalty[h] = idx == space
+            ws[h] += int(widths[idx])
+            if skip_stats is not None:
+                skip_stats["infer"] = skip_stats.get("infer", 0) + 1
+    return lines
+
+
+@torch.no_grad()
 def decode_official(
     model,
     device,
@@ -324,12 +389,15 @@ def decode_official(
     chunk=128,
     ink_skip=0.0,
     skip_stats=None,
+    row_batch=False,
 ):
     """
     Official output.py decode: 18px rows, variable char width, no fold.
     Space class is banned when the previous char was not a space.
     Only one vertical slide (default 0). chunk is unused; decode is one window per char.
     ink_skip: skip the net when 64x64 ink fraction is below this. 0 disables (model 9).
+    row_batch: batch current windows from all rows in one forward (model 11). Same greedy
+    rule per row as the sequential decoder.
     """
     space = space_index(chars)
     ideo = _ideo_space_index(chars, space)
@@ -339,22 +407,38 @@ def decode_official(
         [np.ones((1 + slide, img.shape[1]), dtype=np.float32), img], axis=0
     )
     num_line = (img.shape[0] - WIN) // CELL_H
-    predicts = []
-    for h in range(num_line):
-        row = img[h * CELL_H : h * CELL_H + WIN]
-        predicts.append(
-            _decode_row(
-                model,
-                device,
-                row,
-                chars,
-                space,
-                widths,
-                ink_skip=ink_skip,
-                skip_stats=skip_stats,
-                ideo=ideo,
-            )
+    if row_batch and num_line > 0:
+        rows_np = np.stack(
+            [img[h * CELL_H : h * CELL_H + WIN] for h in range(num_line)]
         )
+        predicts = _decode_rows_batched(
+            model,
+            device,
+            rows_np,
+            chars,
+            space,
+            widths,
+            ink_skip=ink_skip,
+            skip_stats=skip_stats,
+            ideo=ideo,
+        )
+    else:
+        predicts = []
+        for h in range(num_line):
+            row = img[h * CELL_H : h * CELL_H + WIN]
+            predicts.append(
+                _decode_row(
+                    model,
+                    device,
+                    row,
+                    chars,
+                    space,
+                    widths,
+                    ink_skip=ink_skip,
+                    skip_stats=skip_stats,
+                    ideo=ideo,
+                )
+            )
     text = "\n".join("".join(line) for line in predicts)
     png = render_official(predicts, img.shape, char_dict, slide, gray.shape[1], gray.shape[0])
     return text, png, num_line
