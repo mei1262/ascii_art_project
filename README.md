@@ -2,7 +2,7 @@
 
 ## 引用 / Reference
 
-Taizan Yonetsuji. *DeepAA*. 2017. <https://github.com/OsciiArt/DeepAA>
+Osamu Akiyama 2017, ASCII Art Synthesis with Convolutional NetworksASCII Art Synthesis with Convolutional Networks. <https://github.com/OsciiArt/DeepAA>
 
 ## 模型对比 / Models
 
