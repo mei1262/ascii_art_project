@@ -2,7 +2,8 @@
 
 ## 引用 / Reference
 
-. *DeepAA*. 2017.
+Osamu Akiyama, ASCII Art Synthesis with Convolutional Networks, 2017: <https://github.com/OsciiArt/DeepAA>
+线稿化工具：Anilines: <https://github.com/zhenglinpan/AniLines-Anime-Lineart-Extractor>
 
 ## 模型对比 / Models
 
