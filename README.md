@@ -2,7 +2,7 @@
 
 ## 引用 / Reference
 
-. *DeepAA*. 2017. <https://github.com/taizan/DeepAA>
+. *DeepAA*. 2017.
 
 ## 模型对比 / Models
 
