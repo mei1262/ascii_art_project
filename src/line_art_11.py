@@ -1,8 +1,8 @@
 """
-line-art-11-deepaa-light-row-batch
+line-art-11-official
 
-Standalone inference: empty-window skip + one batched forward per row-step.
-Does not import other project scripts.
+Current main product. Standalone inference: empty-window skip + one batched
+forward per row-step. Does not import other project scripts.
 
 Take these with the .py:
   weight_smallhead.pt
@@ -27,7 +27,7 @@ import torch
 import torch.nn as nn
 from PIL import Image
 
-STRATEGY_NAME = "line-art-11-deepaa-light-row-batch"
+STRATEGY_NAME = "line-art-11-official"
 ROW_BATCH = True
 INK_SKIP_DEFAULT = 0.0008
 VIDEO_EXTS = (".mp4", ".avi", ".mov", ".mkv", ".webm", ".m4v")
@@ -211,15 +211,13 @@ def _decode_row(model, device, row, chars, space, widths, ink_skip=0.0, skip_sta
 
 
 def render_official(predicts, img_shape, char_dict, slide, out_w, out_h):
-    canvas = np.ones(img_shape, dtype=np.uint8) * 255
+    canvas = np.zeros(img_shape, dtype=np.uint8)
     for h, line in enumerate(predicts):
         w = 0
         for char in line:
-            glyph = char_dict[char]
+            glyph = np.asarray(char_dict[char])
             cw = int(glyph.shape[1])
-            canvas[h * CELL_H : h * CELL_H + GLYPH_H, w : w + cw] = (
-                255 - glyph.astype(np.uint8) * 255
-            )
+            canvas[h * CELL_H : h * CELL_H + GLYPH_H, w : w + cw] = glyph.astype(np.uint8) * 255
             w += cw
     return Image.fromarray(canvas).crop((0, slide, out_w, out_h + slide))
 

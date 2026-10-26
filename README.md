@@ -116,6 +116,12 @@ Model 11 (model 10 empty-skip + batch one window from every row per step):
 python src/line_art_11.py --from-lines --width 0 --input input/eva-line --output output/line-art-11-deepaa-light-row-batch
 ```
 
+Model 12 fills each character's rectangle from the original frame. The glyph is that same color, darker. `--line` is the line-art video, not an ASCII mp4:
+
+```text
+python src/line_art_12.py --max-frames 120 --input path/to/color.mp4 --line path/to/line.mp4
+```
+
 AniLines line video:
 
 ```text
